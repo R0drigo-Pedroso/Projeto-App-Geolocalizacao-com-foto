@@ -1,5 +1,6 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import React, { useState } from "react";
+import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import {
   SafeAreaView,
@@ -13,20 +14,33 @@ import {
 } from "react-native";
 
 export default function App() {
-  const [text, onChangeText] = React.useState("");
+  // const [text, onChangeText] = React.useState();
 
-  const [foto, setFoto] = useState();
+  // const [foto, setFoto] = useState();
+
+  // const acessarCamera = async () => {
+  //   const fotoTirada = await ImagePicker.launchCameraAsync({
+  //     allowsEditing: true,
+  //     aspect: [9, 16],
+  //     quality: 0.5,
+  //   });
+
+  //   console.log(fotoTirada);
+
+  //   setFoto(fotoTirada.assets[0].uri);
+  // };
+
+  const [text, onChangeText] = useState();
+  const [location, setLocation] = useState(null);
 
   const acessarCamera = async () => {
-    const fotoTirada = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [9, 16],
-      quality: 05,
-    });
+    const { foto } = await Location.requestBackgroundPermissionsAsync();
+    if (foto === "granted") {
+      const location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
 
-    console.log(fotoTirada);
-
-    setFoto(fotoTirada.assets[0].uri);
+      const foto = await ImagePicker.launchCameraAsync();
+    }
   };
 
   return (
@@ -44,11 +58,11 @@ export default function App() {
 
           <View style={estilo.imageFoto}>
             <Image style={estilo.foto}>
-              {foto && (
-                <Image
-                  source={{ uri: foto }}
-                  style={{ width: 300, height: 200 }}
-                />
+              {location && (
+                <Text>
+                  Latitude: {location.coords.latitude} Longitude:{" "}
+                  {location.coords.longitude}
+                </Text>
               )}
             </Image>
             <Button title="Tirar Foto" onPress={acessarCamera} />
