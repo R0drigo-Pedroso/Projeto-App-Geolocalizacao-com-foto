@@ -23,13 +23,13 @@ import {
 export default function App() {
   /* Configurações da capturar imagens */
   const [text, onChangeText] = React.useState();
-  const [status, requestPermission] = ImagePicker.useCameraPermissions();
+  const [statusImage, permissionImage] = ImagePicker.useCameraPermissions();
   const [fotoCapt, setFotoCapt] = useState();
 
   useEffect(() => {
     async function verficarPermissoes() {
       const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
-      requestPermission(cameraStatus) === "granted";
+      permissionImage(cameraStatus) === "granted";
     }
 
     verficarPermissoes();
@@ -46,24 +46,39 @@ export default function App() {
     setFotoCapt(imagem.assets[0].uri);
   };
   /* Configurações da capturar imagens */
-
+  /* -------------------------------------------------------- */
   /* Configuração de mostra localização */
-  const [localizacaoReal, setLocalizacaoReal] = useState(nul);
+  const [meuLocal, setMeulocal] = useState(null);
+  const [localizacao, setLocalizacao] = useState();
 
   useEffect(() => {
-    async function verficarPermissoes() {
-      const { locationStatus } =
-        await Location.requestForegroundPermissionsAsync();
-      requestPermission(locationStatus === "granted");
+    async function obterLocalizacao() {
+      const { obterStatus } = Location.requestForegroundPermissionsAsync();
 
-      let localizacao = await Location.getCurrentPositionAsync({});
-      console.log("Status: " + status.status);
-      setLocalizacaoReal(localizacao);
+      let localizacaoAtual = await Location.getCurrentPositionAsync();
+      setMeulocal(localizacaoAtual);
     }
-    verficarPermissoes();
-  });
 
-  console.log(localizacaoReal);
+    obterLocalizacao();
+  }, []);
+
+  console.log(meuLocal);
+
+  const regiaoInicial = {
+    latitude: -10,
+    longitude: -55,
+    latitudeDelta: 40,
+    longitudeDelta: 40,
+  };
+  const marcarLocal = (e) => {
+    setLocalizacao({
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+      ...meuLocal.coords,
+    });
+
+    console.log(localizacao);
+  };
 
   /* tenho que continhar aqui fazendo a configuração da Latitude e longitute */
 
@@ -96,20 +111,33 @@ export default function App() {
           <View style={estilo.imageFoto}>
             <MapView
               style={estilo.mapa}
-              region={localizacao ?? regiaoInicial}
               liteMode={false}
               mapType="standard"
+              region={localizacao ?? regiaoInicial}
+              onPress={(e) => {
+                setLocalizacao({
+                  latitudeDelta: 0.0922,
+                  longitudeDelta: 0.0421,
+                  latitude: meuLocal.coords.latitude,
+                  longitude: meuLocal.coords.longitude,
+                });
+                console.log(localizacao);
+              }}
             >
               {localizacao && (
                 <Marker
                   coordinate={localizacao}
-                  title="Aqui!!!"
-                  onPress={(e) => console.log(e.nativeEvent)}
-                />
+                  title="estou aqui!"
+                  draggable
+                  onPress={(event) => {
+                    console.log(event.nativeEvent);
+                  }}
+                ></Marker>
               )}
             </MapView>
           </View>
-          <Button title="Localização" onPress={marcarLocal} />
+
+          {meuLocal && <Button title="Localização" onPress={marcarLocal} />}
           {/* Mostra Localização - final do codigo */}
         </ScrollView>
       </View>
@@ -144,9 +172,10 @@ const estilo = StyleSheet.create({
 
   imageFoto: {
     marginVertical: 10,
-    borderStyle: "solid",
-    borderColor: "black",
-    borderWidth: 1,
     borderRadius: 5,
+  },
+
+  mapa: {
+    height: 300,
   },
 });
